@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Game</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js" type="text/javascript"></script>
+  <link rel="shortcut icon" type="image/png" href="./favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css?family=Work+Sans:400,700,900" rel="stylesheet">
+  <link rel="stylesheet" href="./resources/css/style.css">
+
+  <style>
+    /* Universal Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Work Sans', sans-serif;
+      font-size: 1em;
+      background-color: RGB(255, 242, 242);
+      padding: 5.25rem;
+    }
+
+    /* Instructions */
+    .container h1 {
+      font-weight: bold;
+      font-size: 2.5rem;
+      color: rgb(32, 64, 86);
+    }
+
+    .flip-card {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .container h4 {
+      font-weight: bold;
+    }
+
+    .container p {
+      color: rgb(74, 74, 74);
+    }
+
+    /* Grid */
+    .card {
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      background-color: RGB(32, 64, 86);
+      color: RGB(255, 255, 255);
+      height: 12.5rem;
+      width: 10rem;
+      border: 4px solid #fff;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 7rem;
+      margin: 0.5rem;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      cursor: pointer;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  <div class="container">
+    <div class="flip-card">
+      <div class="text-center">
+        <!-- Instructions -->
+        <h1> jQuery Game – Flip Card </h1>
+        <h4> There are following rules</h4>
+        <p> Click on a card to reveal the number on the other side. Click on a second card to try and find a match to the first. If you succeed, the pair will be removed from play. If not, then try again!</p>
+        <p> Good luck!</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div id="game">
+        <!-- Grid appears via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+
+  <script>
+    var MatchGame = {};
+
+    $(function () {
+      var $game = $('#game');
+      var values = MatchGame.generateCardValues();
+      MatchGame.renderCards(values, $game);
+    });
+
+    // Generates and returns an array of matching card values
+    MatchGame.generateCardValues = function () {
+      var cardArray = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8];
+      var cardValues = [];
+      while (cardArray.length > 0) {
+        var randomIndex = Math.floor(Math.random() * cardArray.length);
+        cardValues.push(cardArray[randomIndex]);
+        cardArray.splice(randomIndex, 1);
+      }
+      return cardValues;
+    };
+
+    // Converts card values to jQuery card objects and adds them to the supplied game object
+    MatchGame.renderCards = function (cardValues, $game) {
+      var cardColors = [
+        "hsl(25,85%,65%)", "hsl(55,85%,65%)", "hsl(90,85%,65%)", "hsl(160,85%,65%)", 
+        "hsl(220,85%,65%)", "hsl(265,85%,65%)", "hsl(310,85%,65%)", "hsl(360,85%,65%)"
+      ];
+
+      $game.empty();
+      $game.data('flippedCards', []);  // Track flipped cards
+
+      cardValues.forEach(function (value) {
+        var $card = $('<div class="col-xs-3 card"></div>');
+        $card.data('value', value);
+        $card.data('isFlipped', false);
+        $card.data('color', cardColors[value - 1]);
+        $game.append($card);
+      });
+
+      $('.card').click(function () {
+        MatchGame.flipCard($(this), $('#game'));
+      });
+    };
+
+    // Flips over a given card and checks to see if two cards are flipped over
+    MatchGame.flipCard = function ($card, $game) {
+      if ($card.data('isFlipped')) {
+        return;
+      }
+      $card.css('background-color', $card.data('color'));
+      $card.text($card.data('value'));
+      $card.data('isFlipped', true);
+
+      var flippedCards = $game.data('flippedCards');
+      flippedCards.push($card);
+
+      if (flippedCards.length === 2) {
+        if (flippedCards[0].data('value') === flippedCards[1].data('value')) {
+          var matched = {
+            backgroundColor: 'RGB(153,153,153)',
+            color: 'RGB(204,204,204)'
+          };
+          flippedCards[0].css(matched);
+          flippedCards[1].css(matched);
+        } else {
+          window.setTimeout(function () {
+            flippedCards[0].css('background-color', 'rgb(32, 64, 86)').text('').data('isFlipped', false);
+            flippedCards[1].css('background-color', 'rgb(32, 64, 86)').text('').data('isFlipped', false);
+          }, 350);
+        }
+        $game.data('flippedCards', []); // Reset flippedCards tracker
+      }
+    };
+  </script>
+</body>
+
+</html>
